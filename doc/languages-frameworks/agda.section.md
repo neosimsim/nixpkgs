@@ -17,6 +17,7 @@ To use Agda with libraries, the `agda.withPackages` function can be used. This f
 * A list of packages,
 * or a function which returns a list of packages when given the `agdaPackages` attribute set,
 * or an attribute set containing a list of packages and a GHC derivation for compilation (see below).
+* or an attribute set containing a function which returns a list of packages when given the `agdaPackages` attribute set and a GHC derivation for compilation (see below).
 
 For example, suppose we wanted a version of Agda which has access to the standard library. This can be obtained with the expressions:
 
@@ -32,7 +33,62 @@ agda.withPackages (p: [ p.standard-library ])
 
 or can be called as in the [Compiling Agda](#compiling-agda) section.
 
-If you want to use a library in your home directory (for instance if it is a development version) then typecheck it manually (using `agda.withPackages` if necessary) and then override the `src` attribute of the package to point to your local repository.
+If you want to use a different version of a library (for instance a development version)
+override the `src` attribute of the package to point to your local repository
+
+```
+agda.withPackages (p: [
+  (p.standard-library.overrideAttrs (oldAttrs: {
+    src = /path/to/local/repo/agda-stdlib;
+  }))
+])
+```
+
+or to a git repository
+
+```
+agda.withPackages (p: [
+  (p.standard-library.overrideAttrs (oldAttrs: {
+    src =  fetchFromGitHub {
+      repo = "agda-stdlib";
+      owner = "agda";
+      rev = "v${version}";
+      sha256 = "1asjbisb7pfkgzqy7gf9b23z63bba8l8p1wqfd6ff5ddgqwj3dhp";
+    };
+  }))
+])
+```
+
+If you want to use a library not added to Nixpkgs, you can add the
+dependency by calling `agdaPackages.mkDerivation`.
+
+```
+agda.withPackages (p: [
+  (p.mkDerivation {
+    pname = "my-agda-lib";
+    version = "1.0.0";
+    src = /path/to/my-agda-lib;
+  })
+])
+```
+
+Again you can reference GitHub
+
+```
+agda.withPackages (p: [
+  (p.mkDerivation {
+    pname = "my-agda-lib";
+    version = "1.0.0";
+    src = fetchFromGitHub {
+      repo = "repo";
+      owner = "owner";
+      rev = "v${version}";
+      sha256 = "...";
+    };
+  })
+])
+```
+
 
 Agda will not by default use these libraries. To tell Agda to use the library we have some options:
 
@@ -88,7 +144,7 @@ To add an Agda package to `nixpkgs`, the derivation should be written to `pkgs/d
 ```
 { mkDerivation, standard-library, fetchFromGitHub }:
 ```
-and `mkDerivation` should be called instead of `agdaPackages.mkDerivation`. Here is an example skeleton derivation for iowa-stdlib:
+where `mkDerivation` is set to `agdaPackages.mkDerivation`, therefore `mkDerivation` should be called instead of `agdaPackages.mkDerivation`. Here is an example skeleton derivation for iowa-stdlib:
 
 ```
 mkDerivation {
