@@ -9,7 +9,7 @@ date: 2020-01-06
 
 Agda can be installed from `agda`:
 ```
-$ nix-env -iA agda
+$ nix-env -f '<nixpkgs>' -iA agda
 ```
 
 To use Agda with libraries, the `agda.withPackages` function can be used. This function either takes:
