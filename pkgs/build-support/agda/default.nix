@@ -41,6 +41,8 @@ let
     "lagda.tex"
   ];
 
+  interfaceFile = agdaFile: head (match ''(.*)\.l?agda(\.md|\.org|\.rst|\.tex)?'' agdaFile) + ".agdai";
+
   defaults =
     { pname
     , buildInputs ? []
@@ -70,8 +72,8 @@ let
         installPhase = if installPhase != null then installPhase else ''
           runHook preInstall
           mkdir -p $out
-          find \( ${concatMapStringsSep " -or " (p: "-name '*.${p}'") (extensions ++ extraExtensions)} \) -exec cp -p --parents -t "$out" {} +
-          runHook postInstall
+          find -not \( -path ${everythingFile} -or -path ${interfaceFile everythingFile} \) -and \( ${concatMapStringsSep " -or " (p: "-name '*.${p}'") (extensions ++ extraExtensions)} \) -exec cp -p --parents -t "$out" {} +
+  runHook postInstall
         '';
       };
 in
